@@ -1,28 +1,34 @@
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useConnectionStore } from "@/state/connectionStore";
-import type { MasqueNoize, WgNoize } from "@/types/connection";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { useConnectionStore } from "@/state/connectionStore"
+import type { MasqueNoize, WgNoize } from "@/types/connection"
 
 const MASQUE_LABELS: Record<MasqueNoize, string> = {
   firewall: "Firewall",
   gfw: "GFW",
+  light: "Light",
   off: "Off",
-};
+}
 
 const MASQUE_DESCRIPTIONS: Record<MasqueNoize, string> = {
   firewall:
     "Balanced obfuscation — gets through most filtered networks without much speed cost. Recommended default.",
-  gfw:
-    "Heavier obfuscation with more decoy traffic. Try this when Firewall can't get through.",
+  gfw: "Heavier obfuscation with more decoy traffic. Try this when Firewall can't get through.",
+  light:
+    "Gentlest obfuscation with the least overhead — for networks with only mild interference. Aether ≥1.6.",
   off: "No obfuscation. Only for open networks or testing.",
-};
+}
 
 const WG_LABELS: Record<WgNoize, string> = {
   balanced: "Balanced",
   aggressive: "Aggressive",
   light: "Light",
   off: "Off",
-};
+}
 
 const WG_DESCRIPTIONS: Record<WgNoize, string> = {
   balanced:
@@ -31,20 +37,20 @@ const WG_DESCRIPTIONS: Record<WgNoize, string> = {
     "Heaviest obfuscation with the most decoy packets. For very strict networks.",
   light: "Minimal obfuscation with the least overhead.",
   off: "No obfuscation. Only for open networks or testing.",
-};
+}
 
 /** Shows MASQUE or WireGuard/gool obfuscation profiles based on the selected
  * protocol. Locked outside Idle/Error like every other profile control. */
 export function NoizeProfileToggle() {
-  const status = useConnectionStore((s) => s.status);
-  const protocol = useConnectionStore((s) => s.profile.protocol);
-  const masqueNoize = useConnectionStore((s) => s.profile.masque_noize);
-  const wgNoize = useConnectionStore((s) => s.profile.wg_noize);
-  const setMasqueNoize = useConnectionStore((s) => s.setMasqueNoize);
-  const setWgNoize = useConnectionStore((s) => s.setWgNoize);
+  const status = useConnectionStore((s) => s.status)
+  const protocol = useConnectionStore((s) => s.profile.protocol)
+  const masqueNoize = useConnectionStore((s) => s.profile.masque_noize)
+  const wgNoize = useConnectionStore((s) => s.profile.wg_noize)
+  const setMasqueNoize = useConnectionStore((s) => s.setMasqueNoize)
+  const setWgNoize = useConnectionStore((s) => s.setWgNoize)
 
-  const locked = status.state !== "Idle" && status.state !== "Error";
-  const isMasque = protocol === "auto" || protocol === "masque";
+  const locked = status.state !== "Idle" && status.state !== "Error"
+  const isMasque = protocol === "auto" || protocol === "masque"
 
   if (isMasque) {
     return (
@@ -52,7 +58,7 @@ export function NoizeProfileToggle() {
         type="single"
         value={masqueNoize}
         onValueChange={(v) => {
-          if (v) setMasqueNoize(v as MasqueNoize);
+          if (v) setMasqueNoize(v as MasqueNoize)
         }}
         disabled={locked}
         className="w-full gap-0 rounded-full bg-black/20 p-1 ring-1 ring-white/10"
@@ -75,7 +81,7 @@ export function NoizeProfileToggle() {
           </Tooltip>
         ))}
       </ToggleGroup>
-    );
+    )
   }
 
   return (
@@ -83,7 +89,7 @@ export function NoizeProfileToggle() {
       type="single"
       value={wgNoize}
       onValueChange={(v) => {
-        if (v) setWgNoize(v as WgNoize);
+        if (v) setWgNoize(v as WgNoize)
       }}
       disabled={locked}
       className="w-full gap-0 rounded-full bg-black/20 p-1 ring-1 ring-white/10"
@@ -106,5 +112,5 @@ export function NoizeProfileToggle() {
         </Tooltip>
       ))}
     </ToggleGroup>
-  );
+  )
 }
