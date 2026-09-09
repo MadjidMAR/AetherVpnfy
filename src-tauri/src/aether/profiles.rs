@@ -66,11 +66,13 @@ impl IpVersion {
 
 /// Obfuscation profile for MASQUE connections. The profile shapes how much
 /// junk/padding Aether injects to disguise the handshake from DPI.
+/// Aether ≥1.6.0 also offers `light`, the gentlest profile.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
 pub enum MasqueNoize {
     Firewall,
     Gfw,
+    Light,
     Off,
 }
 
@@ -79,6 +81,7 @@ impl MasqueNoize {
         match self {
             MasqueNoize::Firewall => "firewall",
             MasqueNoize::Gfw => "gfw",
+            MasqueNoize::Light => "light",
             MasqueNoize::Off => "off",
         }
     }
@@ -172,6 +175,36 @@ pub struct ConnectionProfile {
     /// Optional path to an Aether routing file with [block]/[direct] sections.
     #[serde(default)]
     pub routes_file: String,
+    /// Aether ≥1.6.0: extra HTTP CONNECT listener next to the SOCKS5 one,
+    /// for clients that cannot speak SOCKS (`--http-proxy`). Empty = off.
+    #[serde(default)]
+    pub http_proxy: String,
+    /// Aether ≥1.7.0: chain behind another VPN/proxy app (`--upstream`,
+    /// e.g. `socks5://127.0.0.1:1080`). Sent via env, never argv, because
+    /// the URL can carry a password. Empty = direct.
+    #[serde(default)]
+    pub upstream: String,
+    /// Skip the endpoint scan when a good address is already known
+    /// (`--peer ip:port`). Empty = scan normally.
+    #[serde(default)]
+    pub peer: String,
+    /// Aether ≥1.9.0: name the WARP-in-WARP hops yourself instead of
+    /// scanning (`--wiw-outer/--wiw-inner/--wiw-peers ip:port`). The port is
+    /// required. Naming both skips the scan; naming one scans for the other.
+    #[serde(default)]
+    pub wiw_outer: String,
+    #[serde(default)]
+    pub wiw_inner: String,
+    #[serde(default)]
+    pub wiw_peers: String,
+    /// Aether ≥1.9.0: force a fresh scan for both WIW hops, ignoring any
+    /// endpoint left in the environment (`--wiw-scan`).
+    #[serde(default)]
+    pub wiw_scan: bool,
+    /// Aether ≥1.9.0: inner MTU of the MASQUE tunnel (`AETHER_MASQUE_MTU`).
+    /// Sent via env. Empty = core default.
+    #[serde(default)]
+    pub masque_mtu: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, Default)]
@@ -270,6 +303,31 @@ impl ConnectionProfile {
             args.push("--routes".into());
             args.push(self.routes_file.trim().into());
         }
+        if !self.http_proxy.trim().is_empty() {
+            args.push("--http-proxy".into());
+            args.push(self.http_proxy.trim().into());
+        }
+        if !self.peer.trim().is_empty() {
+            args.push("--peer".into());
+            args.push(self.peer.trim().into());
+        }
+        if !self.wiw_outer.trim().is_empty() {
+            args.push("--wiw-outer".into());
+            args.push(self.wiw_outer.trim().into());
+        }
+        if !self.wiw_inner.trim().is_empty() {
+            args.push("--wiw-inner".into());
+            args.push(self.wiw_inner.trim().into());
+        }
+        if !self.wiw_peers.trim().is_empty() {
+            args.push("--wiw-peers".into());
+            args.push(self.wiw_peers.trim().into());
+        }
+        if self.wiw_scan {
+            args.push("--wiw-scan".into());
+        }
+        // NOTE: `upstream` (may contain a password) and `masque_mtu` travel
+        // via environment in pty.rs, never via argv.
         args
     }
 
@@ -423,6 +481,53 @@ mod tests {
         );
         assert!(!p.as_args().iter().any(|arg| arg.contains("me@example.com")));
     }
+
+    #[test]
+    fn v190_options_emit_expected_flags() {
+        let p = ConnectionProfile {
+            http_proxy: "127.0.0.1:1820".into(),
+            peer: "162.159.196.1:443".into(),
+            wiw_outer: "162.159.192.1:2408".into(),
+            wiw_inner: "188.114.96.1:2408".into(),
+            wiw_scan: true,
+            masque_mtu: "1280".into(),
+            upstream: "socks5://alice:s3cret@127.0.0.1:1080".into(),
+            ..Default::default()
+        };
+        let args = p.as_args();
+        for flag in ["--http-proxy", "--peer", "--wiw-outer", "--wiw-inner", "--wiw-scan"] {
+            assert!(args.iter().any(|a| a == flag), "missing {flag} in {args:?}");
+        }
+        // Secrets and env-only knobs must never appear on the command line.
+        assert!(!args.iter().any(|a| a.contains("s3cret")));
+        assert!(!args.iter().any(|a| a == "1280"));
+    }
+
+    #[test]
+    fn v190_options_default_off() {
+        let args = ConnectionProfile::default().as_args();
+        for flag in [
+            "--http-proxy",
+            "--peer",
+            "--wiw-outer",
+            "--wiw-inner",
+            "--wiw-peers",
+            "--wiw-scan",
+        ] {
+            assert!(!args.iter().any(|a| a == flag), "unexpected {flag} in {args:?}");
+        }
+    }
+
+    #[test]
+    fn masque_light_emits_light_noize() {
+        let p = ConnectionProfile {
+            masque_noize: MasqueNoize::Light,
+            ..Default::default()
+        };
+        let args = p.as_args();
+        let i = args.iter().position(|a| a == "--noize").expect("missing --noize");
+        assert_eq!(args.get(i + 1).map(String::as_str), Some("light"));
+    }
 }
 
 impl Default for ConnectionProfile {
@@ -448,6 +553,14 @@ impl Default for ConnectionProfile {
             route_block: String::new(),
             route_direct: String::new(),
             routes_file: String::new(),
+            http_proxy: String::new(),
+            upstream: String::new(),
+            peer: String::new(),
+            wiw_outer: String::new(),
+            wiw_inner: String::new(),
+            wiw_peers: String::new(),
+            wiw_scan: false,
+            masque_mtu: String::new(),
         }
     }
 }

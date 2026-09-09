@@ -435,7 +435,7 @@ pub fn request_disconnect(
     Ok(())
 }
 
-/// Supplies the Cloudflare Access one-time code requested by Aether 1.5.0
+/// Supplies the Cloudflare Access one-time code requested by Aether
 /// during a Zero Trust email enrolment. It is deliberately a narrow command
 /// instead of a generic PTY write endpoint, so the webview can never inject
 /// arbitrary terminal input into the bundled core.

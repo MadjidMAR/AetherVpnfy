@@ -1,30 +1,36 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import { ChevronDown, Info, Settings2 } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react"
+import { ChevronDown, Info, Settings2 } from "lucide-react"
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Switch } from "@/components/ui/switch";
-import { ProtocolSelect } from "@/components/ProtocolSelect";
-import { ScanModeToggle } from "@/components/ScanModeToggle";
-import { IpVersionToggle } from "@/components/IpVersionToggle";
-import { MasqueTransportToggle } from "@/components/MasqueTransportToggle";
-import { NoizeProfileToggle } from "@/components/NoizeProfileToggle";
-import { BindAddressField } from "@/components/BindAddressField";
-import { ZeroTrustSettings } from "@/components/ZeroTrustSettings";
-import { RoutingSettings } from "@/components/RoutingSettings";
-import { useConnectionStore } from "@/state/connectionStore";
+} from "@/components/ui/collapsible"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { Switch } from "@/components/ui/switch"
+import { ProtocolSelect } from "@/components/ProtocolSelect"
+import { ScanModeToggle } from "@/components/ScanModeToggle"
+import { IpVersionToggle } from "@/components/IpVersionToggle"
+import { MasqueTransportToggle } from "@/components/MasqueTransportToggle"
+import { NoizeProfileToggle } from "@/components/NoizeProfileToggle"
+import { BindAddressField } from "@/components/BindAddressField"
+import { ProxyChainSettings } from "@/components/ProxyChainSettings"
+import { ManualEndpointsSettings } from "@/components/ManualEndpointsSettings"
+import { ZeroTrustSettings } from "@/components/ZeroTrustSettings"
+import { RoutingSettings } from "@/components/RoutingSettings"
+import { useConnectionStore } from "@/state/connectionStore"
 
 function FieldRow({
   label,
   tooltip,
   children,
 }: {
-  label: string;
-  tooltip?: string;
-  children: ReactNode;
+  label: string
+  tooltip?: string
+  children: ReactNode
 }) {
   return (
     <div className="flex flex-col gap-1.5">
@@ -41,7 +47,7 @@ function FieldRow({
       </div>
       {children}
     </div>
-  );
+  )
 }
 
 /**
@@ -56,26 +62,26 @@ function FieldRow({
  * fast CSS fade/slide and nothing else.
  */
 export function AdvancedPanel() {
-  const logs = useConnectionStore((s) => s.logs);
-  const status = useConnectionStore((s) => s.status);
-  const quickReconnect = useConnectionStore((s) => s.profile.quick_reconnect);
-  const setQuickReconnect = useConnectionStore((s) => s.setQuickReconnect);
-  const [open, setOpen] = useState(false);
+  const logs = useConnectionStore((s) => s.logs)
+  const status = useConnectionStore((s) => s.status)
+  const quickReconnect = useConnectionStore((s) => s.profile.quick_reconnect)
+  const setQuickReconnect = useConnectionStore((s) => s.setQuickReconnect)
+  const [open, setOpen] = useState(false)
   // Launch flag — locked mid-session like the other profile controls.
-  const locked = status.state !== "Idle" && status.state !== "Error";
-  const [autoScroll, setAutoScroll] = useState(true);
-  const viewportRef = useRef<HTMLDivElement>(null);
+  const locked = status.state !== "Idle" && status.state !== "Error"
+  const [autoScroll, setAutoScroll] = useState(true)
+  const viewportRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (autoScroll && viewportRef.current) {
-      viewportRef.current.scrollTop = viewportRef.current.scrollHeight;
+      viewportRef.current.scrollTop = viewportRef.current.scrollHeight
     }
-  }, [logs, autoScroll]);
+  }, [logs, autoScroll])
 
   return (
     <div className="w-full max-w-sm">
       <Collapsible open={open} onOpenChange={setOpen}>
-        <CollapsibleTrigger className="flex w-full items-center justify-center gap-1.5 py-2 text-xs text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary rounded-md">
+        <CollapsibleTrigger className="flex w-full items-center justify-center gap-1.5 rounded-md py-2 text-xs text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary">
           <Settings2 size={14} />
           Advanced
           <ChevronDown
@@ -84,7 +90,7 @@ export function AdvancedPanel() {
             data-state={open ? "open" : "closed"}
           />
         </CollapsibleTrigger>
-        <CollapsibleContent className="overflow-hidden data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom-1 data-[state=open]:duration-150 data-[state=open]:[animation-timing-function:cubic-bezier(0.16,1,0.3,1)] data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:duration-100">
+        <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-out data-[state=closed]:duration-100 data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:duration-150 data-[state=open]:fade-in-0 data-[state=open]:[animation-timing-function:cubic-bezier(0.16,1,0.3,1)] data-[state=open]:slide-in-from-bottom-1">
           <div className="flex flex-col gap-4 pb-2">
             <FieldRow
               label="Protocol"
@@ -115,9 +121,21 @@ export function AdvancedPanel() {
             </FieldRow>
             <FieldRow
               label="SOCKS5 Proxy"
-              tooltip="The local address Aether's SOCKS5 proxy listens on. Change the port to avoid conflicts, or enable LAN to share the tunnel with other devices on your network."
+              tooltip="The local address Aether's SOCKS5 proxy listens on. Change the port to avoid conflicts, or enable LAN to share the tunnel with other devices on your network. v1.8+: binding anywhere but loopback is shared with the network without authentication — only do it on purpose."
             >
               <BindAddressField />
+            </FieldRow>
+            <FieldRow
+              label="HTTP Proxy & Upstream"
+              tooltip="Aether 1.6/1.7: an extra HTTP CONNECT listener for clients without SOCKS support, and chaining the whole tunnel behind another VPN or proxy app."
+            >
+              <ProxyChainSettings />
+            </FieldRow>
+            <FieldRow
+              label="Manual Endpoints"
+              tooltip="Aether 1.9: skip route discovery with a known-good address, pin the WARP-in-WARP hops, or tune the MASQUE inner MTU. Leave everything empty for the normal automatic scan."
+            >
+              <ManualEndpointsSettings />
             </FieldRow>
             <FieldRow
               label="Zero Trust (organization)"
@@ -140,9 +158,9 @@ export function AdvancedPanel() {
                     <Info size={12} />
                   </TooltipTrigger>
                   <TooltipContent>
-                    Remembers the last gateway that worked and re-tests it first on the next
-                    connect, skipping the full scan when it still works. Turn off to always scan
-                    fresh.
+                    Remembers the last gateway that worked and re-tests it first
+                    on the next connect, skipping the full scan when it still
+                    works. Turn off to always scan fresh.
                   </TooltipContent>
                 </Tooltip>
               </div>
@@ -165,8 +183,10 @@ export function AdvancedPanel() {
             <div
               ref={viewportRef}
               onScroll={(e) => {
-                const el = e.currentTarget;
-                setAutoScroll(el.scrollHeight - el.scrollTop - el.clientHeight < 24);
+                const el = e.currentTarget
+                setAutoScroll(
+                  el.scrollHeight - el.scrollTop - el.clientHeight < 24
+                )
               }}
               className="max-h-64 overflow-y-auto rounded-md bg-black/20 p-2 font-mono text-xs text-muted-foreground ring-1 ring-white/10"
             >
@@ -180,5 +200,5 @@ export function AdvancedPanel() {
         </CollapsibleContent>
       </Collapsible>
     </div>
-  );
+  )
 }

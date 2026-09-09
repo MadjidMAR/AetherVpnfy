@@ -111,6 +111,14 @@ pub fn spawn(
     // Keep Access credentials out of the process command line. Aether's
     // flags and environment variables are equivalent, but command arguments
     // are trivially visible to other local processes on several platforms.
+    // The same applies to --upstream (its URL can embed user:password).
+    if !profile.upstream.trim().is_empty() {
+        cmd.env("AETHER_UPSTREAM", profile.upstream.trim());
+    }
+    // Aether ≥1.9.0 inner MASQUE MTU. Env-only knob, no CLI flag.
+    if !profile.masque_mtu.trim().is_empty() {
+        cmd.env("AETHER_MASQUE_MTU", profile.masque_mtu.trim());
+    }
     match profile.zero_trust_auth {
         ZeroTrustAuth::Service
             if !profile.access_client_id.trim().is_empty()
