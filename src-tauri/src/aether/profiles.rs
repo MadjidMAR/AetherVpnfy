@@ -162,6 +162,10 @@ pub struct ConnectionProfile {
     /// A pre-obtained Cloudflare Access enrolment JWT.
     #[serde(default)]
     pub access_token: String,
+    /// Route all system traffic through the Aether tunnel via a TUN adapter
+    /// and tun2socks bridge. Windows only; ignored on other platforms.
+    #[serde(default)]
+    pub system_tunnel: bool,
     /// Route HTTP/HTTPS through the organization's Gateway proxy. This is
     /// intentionally off by default because the organization can log it.
     #[serde(default)]
@@ -561,6 +565,7 @@ impl Default for ConnectionProfile {
             wiw_peers: String::new(),
             wiw_scan: false,
             masque_mtu: String::new(),
+            system_tunnel: false,
         }
     }
 }

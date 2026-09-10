@@ -53,6 +53,7 @@ interface ConnectionState {
   setWiwPeers: (wiw_peers: string) => void
   setWiwScan: (wiw_scan: boolean) => void
   setMasqueMtu: (masque_mtu: string) => void
+  setSystemTunnel: (system_tunnel: boolean) => void
   retryAfterSidecarError: () => void
 }
 
@@ -86,6 +87,7 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
     wiw_peers: "",
     wiw_scan: false,
     masque_mtu: "",
+    system_tunnel: false,
   },
   logs: [],
   sidecarError: null,
@@ -208,6 +210,9 @@ export const useConnectionStore = create<ConnectionState>((set, get) => ({
 
   setMasqueMtu: (masque_mtu) =>
     set((s) => ({ profile: { ...s.profile, masque_mtu } })),
+
+  setSystemTunnel: (system_tunnel) =>
+    set((s) => ({ profile: { ...s.profile, system_tunnel } })),
 
   // Clears the fallback screen so the user can attempt Connect again (e.g.
   // after fixing a broken install) — the next connect() call will re-set

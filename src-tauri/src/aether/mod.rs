@@ -3,6 +3,7 @@ pub mod profiles;
 pub mod prompts;
 pub mod pty;
 pub mod status;
+pub mod tun;
 
 use crate::error::AetherError;
 use crate::events::{now_millis, LogEvent, LOG_EVENT, STATUS_EVENT};

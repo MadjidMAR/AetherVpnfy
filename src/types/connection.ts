@@ -64,6 +64,8 @@ export interface ConnectionProfile {
   wiw_scan: boolean
   /** Aether ≥1.9.0 inner MASQUE MTU (sent via env). Empty = core default. */
   masque_mtu: string
+  /** Route all system traffic through the Aether tunnel via TUN adapter + tun2socks. Windows only. */
+  system_tunnel: boolean
 }
 
 export interface LogLine {
