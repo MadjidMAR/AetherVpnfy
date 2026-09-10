@@ -100,6 +100,19 @@ pub fn start_connect(
     // explicitly inside spawn_and_monitor rather than ever leaving the
     // state machine stuck in Launching with no process behind it.
     let profile = profile_override.unwrap_or_else(|| profiles::load(&app));
+
+    // Check admin privileges if system_tunnel is enabled — fail early
+    // with a clear message instead of a cryptic routing error later.
+    if profile.system_tunnel {
+        if !tun::is_admin() {
+            return Err(AetherError::Internal(
+                "System Tunnel requires Administrator privileges. \
+                 Right-click the app and select 'Run as administrator'."
+                    .into(),
+            ));
+        }
+    }
+
     let binary = resolve_binary(&app)?;
     let data_dir = app_data_dir(&app);
     std::fs::create_dir_all(&data_dir).map_err(|e| AetherError::Internal(e.to_string()))?;
