@@ -2,11 +2,7 @@
 //!
 //! When enabled, tun2socks creates a Wintun adapter (`aether-tun`) and bridges
 //! TUN traffic to the Aether SOCKS5 proxy. Windows routing sends all system
-//! traffic through the TUN. The user can then enable Internet Connection
-//! Sharing from Control Panel to share the tunnel via hotspot.
-//!
-//! All real implementation is behind `#[cfg(target_os = "windows")]`.
-//! Non-Windows platforms get a no-op stub.
+//! traffic through the TUN.
 
 use std::sync::atomic::{AtomicBool, Ordering};
 
@@ -33,13 +29,14 @@ mod platform {
     use std::net::Ipv4Addr;
     use std::path::PathBuf;
     use std::process::{Child, Command, Stdio};
+    use std::io::Read;
 
     const TUN_IP: &str = "10.0.0.2";
     const TUN_MASK: &str = "255.255.255.0";
     const TUN_GW: &str = "10.0.0.1";
     const TUN_DNS: &str = "1.1.1.1";
     const TUN_ADAPTER_NAME: &str = "aether-tun";
-    const TUN_POLL_ATTEMPTS: u32 = 10;
+    const TUN_POLL_ATTEMPTS: u32 = 15;
 
     pub struct TunManager {
         tun2socks: Option<Child>,
@@ -47,14 +44,24 @@ mod platform {
         tun2socks_path: PathBuf,
     }
 
+    /// Robust admin check using PowerShell (works on all Windows versions).
     pub fn is_running_as_admin() -> bool {
-        Command::new("net")
-            .args(["session"])
-            .stdout(Stdio::null())
+        let output = Command::new("powershell")
+            .args([
+                "-NoProfile", "-Command",
+                "([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)"
+            ])
+            .stdout(Stdio::piped())
             .stderr(Stdio::null())
-            .status()
-            .map(|s| s.success())
-            .unwrap_or(false)
+            .output();
+        match output {
+            Ok(o) => {
+                let stdout = String::from_utf8_lossy(&o.stdout).trim().to_lowercase();
+                log::info!("[tun] Admin check result: {stdout}");
+                stdout == "true"
+            }
+            Err(_) => false,
+        }
     }
 
     impl TunManager {
@@ -82,46 +89,75 @@ mod platform {
                 ));
             }
 
-            // 1. Launch tun2socks with Wintun device.
-            let child = Command::new(&self.tun2socks_path)
+            log::info!("[tun] Starting tun2socks: {}", self.tun2socks_path.display());
+            log::info!("[tun] Proxy: socks5://{}", socks_addr);
+
+            // 1. Launch tun2socks.
+            let mut child = Command::new(&self.tun2socks_path)
                 .args([
-                    "-device",
-                    &format!("wintun://{}", TUN_ADAPTER_NAME),
-                    "-proxy",
-                    &format!("socks5://{}", socks_addr),
-                    "-loglevel",
-                    "info",
+                    "-device", &format!("wintun://{}", TUN_ADAPTER_NAME),
+                    "-proxy", &format!("socks5://{}", socks_addr),
+                    "-loglevel", "debug",
                 ])
-                .stdout(Stdio::null())
+                .stdout(Stdio::piped())
                 .stderr(Stdio::piped())
                 .spawn()
-                .map_err(|e| format!("Failed to start tun2socks: {e}"))?;
+                .map_err(|e| {
+                    let msg = format!("Failed to start tun2socks: {e}");
+                    log::error!("[tun] {msg}");
+                    msg
+                })?;
+
+            // 2. Brief check: if tun2socks exits immediately, it failed.
+            std::thread::sleep(std::time::Duration::from_secs(1));
+            if let Some(exit) = child.try_wait().ok().flatten() {
+                // Read stderr for error details.
+                let mut stderr = String::new();
+                if let Some(mut stderr_pipe) = child.stderr.take() {
+                    let _ = stderr_pipe.read_to_string(&mut stderr);
+                }
+                let msg = format!(
+                    "tun2socks exited immediately with {exit}. stderr: {stderr}"
+                );
+                log::error!("[tun] {msg}");
+                return Err(msg);
+            }
 
             self.tun2socks = Some(child);
 
-            // 2. Poll for TUN adapter to appear.
+            // 3. Poll for TUN adapter.
+            log::info!("[tun] Polling for TUN adapter '{}'...", TUN_ADAPTER_NAME);
             let mut found = false;
             for attempt in 1..=TUN_POLL_ATTEMPTS {
                 std::thread::sleep(std::time::Duration::from_secs(1));
                 if adapter_exists(TUN_ADAPTER_NAME) {
-                    log::info!("TUN adapter appeared after {}s", attempt);
+                    log::info!("[tun] TUN adapter appeared after {}s", attempt);
                     found = true;
                     break;
                 }
+                log::info!("[tun] Poll attempt {attempt}/{}", TUN_POLL_ATTEMPTS);
             }
             if !found {
-                if let Some(mut child) = self.tun2socks.take() {
+                // Read any tun2socks output before killing.
+                let mut stderr = String::new();
+                if let Some(ref mut child) = self.tun2socks {
+                    if let Some(mut pipe) = child.stderr.take() {
+                        let _ = pipe.read_to_string(&mut stderr);
+                    }
                     let _ = child.kill();
                     let _ = child.wait();
                 }
-                return Err(format!(
+                self.tun2socks = None;
+                let msg = format!(
                     "TUN adapter '{}' did not appear after {}s. \
-                     Ensure wintun.dll is present and run as Administrator.",
+                     tun2socks stderr: {stderr}",
                     TUN_ADAPTER_NAME, TUN_POLL_ATTEMPTS
-                ));
+                );
+                log::error!("[tun] {msg}");
+                return Err(msg);
             }
 
-            // 3. Configure TUN adapter IP and DNS.
+            // 4. Configure TUN adapter.
             run_cmd(&format!(
                 "netsh interface ip set address \"{TUN_ADAPTER_NAME}\" static {TUN_IP} {TUN_MASK} {TUN_GW}"
             ))?;
@@ -129,32 +165,31 @@ mod platform {
                 "netsh interface ip set dns \"{TUN_ADAPTER_NAME}\" static {TUN_DNS}"
             ))?;
 
-            // 4. Capture original gateway.
+            // 5. Capture original gateway.
             self.original_gw = capture_default_gateway();
-            log::info!("Original gateway: {}", self.original_gw.as_deref().unwrap_or("(none)"));
+            log::info!("[tun] Original gateway: {}", self.original_gw.as_deref().unwrap_or("(none)"));
 
-            // 5. Add static route for original gateway (prevent routing loop).
+            // 6. Add static route for original gateway (prevent routing loop).
             if let Some(ref gw) = self.original_gw {
                 let _ = run_cmd(&format!(
                     "route add {gw} mask 255.255.255.255 {gw} metric 1"
                 ));
             }
 
-            // 6. Set TUN as default gateway.
+            // 7. Set TUN as default gateway.
             if let Some(ref gw) = self.original_gw {
                 run_cmd(&format!("route delete 0.0.0.0 mask 0.0.0.0 {gw}"))?;
             }
             run_cmd("route add 0.0.0.0 mask 0.0.0.0 10.0.0.1 metric 5")?;
 
             TUN_ACTIVE.store(true, Ordering::Relaxed);
-            log::info!("System tunnel started");
+            log::info!("[tun] System tunnel started successfully");
             Ok(())
         }
 
         pub fn stop(&mut self) {
             TUN_ACTIVE.store(false, Ordering::Relaxed);
 
-            // Restore original default gateway.
             if let Some(ref gw) = self.original_gw {
                 let _ = run_cmd("route delete 0.0.0.0 mask 0.0.0.0 10.0.0.1");
                 let _ = run_cmd(&format!("route add 0.0.0.0 mask 0.0.0.0 {gw} metric 10"));
@@ -162,13 +197,11 @@ mod platform {
             }
             self.original_gw = None;
 
-            // Kill tun2socks.
             if let Some(mut child) = self.tun2socks.take() {
                 let _ = child.kill();
                 let _ = child.wait();
             }
 
-            // Reset DNS.
             let _ = run_cmd(&format!(
                 "netsh interface ip set dns \"{TUN_ADAPTER_NAME}\" dhcp"
             ));
@@ -176,9 +209,7 @@ mod platform {
     }
 
     impl Drop for TunManager {
-        fn drop(&mut self) {
-            self.stop();
-        }
+        fn drop(&mut self) { self.stop(); }
     }
 
     fn adapter_exists(name: &str) -> bool {
@@ -217,6 +248,7 @@ mod platform {
     }
 
     fn run_cmd(cmd: &str) -> Result<(), String> {
+        log::info!("[tun] Running: {cmd}");
         let output = Command::new("cmd")
             .args(["/C", cmd])
             .stdout(Stdio::null())
@@ -230,6 +262,7 @@ mod platform {
             } else {
                 format!("Command failed: {cmd}\nstderr: {stderr}")
             };
+            log::error!("[tun] {msg}");
             if cmd.starts_with("netsh") || cmd.starts_with("route") {
                 return Err(format!("{msg}\nRun as Administrator required"));
             }
@@ -242,9 +275,7 @@ mod platform {
 #[cfg(not(target_os = "windows"))]
 mod platform {
     use std::path::PathBuf;
-
     pub struct TunManager;
-
     impl TunManager {
         pub fn new(_resource_dir: &PathBuf) -> Self { Self }
         pub fn start(&mut self, _socks_addr: &str) -> Result<(), String> {
@@ -252,11 +283,9 @@ mod platform {
         }
         pub fn stop(&mut self) {}
     }
-
     impl Drop for TunManager {
         fn drop(&mut self) { self.stop(); }
     }
-
     pub fn is_running_as_admin() -> bool { false }
 }
 
