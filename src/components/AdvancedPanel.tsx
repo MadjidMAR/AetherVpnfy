@@ -66,6 +66,8 @@ export function AdvancedPanel() {
   const status = useConnectionStore((s) => s.status)
   const quickReconnect = useConnectionStore((s) => s.profile.quick_reconnect)
   const setQuickReconnect = useConnectionStore((s) => s.setQuickReconnect)
+  const systemTunnel = useConnectionStore((s) => s.profile.system_tunnel)
+  const setSystemTunnel = useConnectionStore((s) => s.setSystemTunnel)
   const [open, setOpen] = useState(false)
   // Launch flag — locked mid-session like the other profile controls.
   const locked = status.state !== "Idle" && status.state !== "Error"
@@ -169,6 +171,29 @@ export function AdvancedPanel() {
                 onCheckedChange={setQuickReconnect}
                 disabled={locked}
                 aria-label="Quick reconnect"
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                System Tunnel (Hotspot)
+                <Tooltip>
+                  <TooltipTrigger aria-label="About System Tunnel">
+                    <Info size={12} />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    Creates a TUN adapter and routes all system traffic through
+                    the Aether tunnel. Enable this to share the VPN connection
+                    via Windows hotspot. Requires tun2socks.exe and
+                    Administrator privileges. Windows only.
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+              <Switch
+                checked={systemTunnel}
+                onCheckedChange={setSystemTunnel}
+                disabled={locked}
+                aria-label="System Tunnel"
               />
             </div>
 
