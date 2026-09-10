@@ -5,16 +5,16 @@
 **Please do not open a public issue for security vulnerabilities.**
 
 Report privately through GitHub Security Advisories:
-[**Report a vulnerability**](https://github.com/MatinSenPai/Aether-GUI/security/advisories/new).
+[**Report a vulnerability**](https://github.com/MadjidMAR/AetherVpnfy/security/advisories/new).
 
 You'll get an acknowledgement as soon as possible, and we'll coordinate a fix and disclosure with you.
 
 ## Scope
 
-Aether-GUI is a thin desktop wrapper around the upstream [Aether](https://github.com/CluvexStudio/Aether)
+AetherifY is a thin desktop wrapper around the upstream [Aether](https://github.com/CluvexStudio/Aether)
 tunnel. Please report to the right place:
 
-- **This repo (Aether-GUI)** owns the GUI and how it drives the bundled binary — the Tauri IPC
+- **This repo (AetherifY)** owns the GUI and how it drives the bundled binary — the Tauri IPC
   surface, how the `aether` process is spawned and its prompts answered, the checksum-pinning of the
   bundled binary, the app's Content-Security-Policy, and the auto-update/release pipeline.
 - **Upstream ([CluvexStudio/Aether](https://github.com/CluvexStudio/Aether))** owns the tunneling

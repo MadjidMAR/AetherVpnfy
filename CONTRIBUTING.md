@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for your interest in improving Aether-GUI.
+Thanks for your interest in improving AetherifY.
 
 This repo is the **GUI** only. Changes to the tunnel, protocols, or route discovery belong upstream
 at [CluvexStudio/Aether](https://github.com/CluvexStudio/Aether).

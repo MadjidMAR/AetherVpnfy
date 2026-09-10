@@ -1,9 +1,9 @@
 <div dir="rtl">
 
-# Aether-GUI
+# AetherifY
 
-[![Release](https://img.shields.io/github/v/release/MatinSenPai/Aether-GUI?sort=semver)](https://github.com/MatinSenPai/Aether-GUI/releases)
-[![License: AGPL v3](https://img.shields.io/github/license/MatinSenPai/Aether-GUI)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/MadjidMAR/AetherVpnfy?sort=semver)](https://github.com/MadjidMAR/AetherVpnfy/releases)
+[![License: AGPL v3](https://img.shields.io/github/license/MadjidMAR/AetherVpnfy)](LICENSE)
 ![Platform](https://img.shields.io/badge/platform-Windows-0078D6)
 ![Tauri](https://img.shields.io/badge/Tauri-2-24C8DB?logo=tauri&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
@@ -11,12 +11,12 @@
 
 [English](README.md) · **فارسی**
 
-یک برنامه‌ی دسکتاپ ساده و «تک‌کلیکی» برای [**Aether**](https://github.com/CluvexStudio/Aether)؛ همان ابزار عبور از سانسور که مخصوص شبکه‌های خیلی محدود ساخته شده. خودِ Aether یک ابزار خط‌فرمانی (ترمینالی) است: یک مسیر باز به بیرون پیدا می‌کند، یک تونل رمزنگاری‌شده برقرار می‌کند و یک پراکسی SOCKS5 روی سیستم خودتان باز می‌کند. کاری که Aether-GUI می‌کند این است که همه‌ی این‌ها را داخل یک برنامه‌ی گرافیکی کوچک و خوش‌دست می‌گذارد تا دیگر لازم نباشد با ترمینال سر و کله بزنید — فقط دکمه‌ی اتصال را بزنید، بقیه‌اش (ساختن هویت، پیدا کردن مسیر، جواب دادن به سؤال‌های برنامه) خودکار پشت صحنه انجام می‌شود.
+یک برنامه‌ی دسکتاپ ساده و «تک‌کلیکی» برای [**Aether**](https://github.com/CluvexStudio/Aether)؛ همان ابزار عبور از سانسور که مخصوص شبکه‌های خیلی محدود ساخته شده. خودِ Aether یک ابزار خط‌فرمانی (ترمینالی) است: یک مسیر باز به بیرون پیدا می‌کند، یک تونل رمزنگاری‌شده برقرار می‌کند و یک پراکسی SOCKS5 روی سیستم خودتان باز می‌کند. کاری که AetherifY می‌کند این است که همه‌ی این‌ها را داخل یک برنامه‌ی گرافیکی کوچک و خوش‌دست می‌گذارد تا دیگر لازم نباشد با ترمینال سر و کله بزنید — فقط دکمه‌ی اتصال را بزنید، بقیه‌اش (ساختن هویت، پیدا کردن مسیر، جواب دادن به سؤال‌های برنامه) خودکار پشت صحنه انجام می‌شود.
 
 این پروژه هیچ بخشی از منطقِ تونل‌زنی Aether را از نو ننوشته. فقط فایل واقعیِ `aether` را داخل یک شبه‌ترمینال اجرا می‌کند، به سؤال‌های اولیه‌اش جای شما جواب می‌دهد و خروجی‌اش را می‌خواند تا به شما بگوید چه خبر است. کارِ اصلیِ عبور از سانسور — رمزنگاری، پنهان‌سازی ترافیک با MASQUE/QUIC، WireGuard و جست‌وجوی مسیر — همه مالِ [Aether](https://github.com/CluvexStudio/Aether) است، نه این مخزن.
 
 <div align="center">
-  <img src="docs/screenshot-idle.png" alt="صفحه‌ی اتصال Aether-GUI" width="380">
+  <img src="docs/screenshot-idle.png" alt="صفحه‌ی اتصال AetherifY" width="380">
 </div>
 
 ## امکانات
@@ -36,10 +36,10 @@
 
 ## نصب
 
-جدیدترین نصب‌کننده را از [صفحه‌ی Releases](https://github.com/MatinSenPai/Aether-GUI/releases) بردارید:
+جدیدترین نصب‌کننده را از [صفحه‌ی Releases](https://github.com/MadjidMAR/AetherVpnfy/releases) بردارید:
 
-- `Aether-GUI_x.y.z_x64-setup.exe` — نصب‌کننده‌ی معمولی (پیشنهادی)
-- `Aether-GUI_x.y.z_x64_en-US.msi` — بسته‌ی MSI، برای نصبِ اسکریپتی/سازمانی
+- `AetherifY_x.y.z_x64-setup.exe` — نصب‌کننده‌ی معمولی (پیشنهادی)
+- `AetherifY_x.y.z_x64_en-US.msi` — بسته‌ی MSI، برای نصبِ اسکریپتی/سازمانی
 
 فعلاً فقط ویندوز ۶۴بیتی — برای بقیه‌ی سیستم‌عامل‌ها بخشِ «ساختن از روی سورس» را ببینید.
 
@@ -58,7 +58,7 @@
 
 ۳. **گرفتن فایل باینری Aether**
 
-   Aether-GUI فایل واقعیِ `aether` را از [ریلیزهای CluvexStudio/Aether](https://github.com/CluvexStudio/Aether/releases) کنار خودش قرار می‌دهد و خودش نمی‌سازدش — این مخزن فقط رابط گرافیکی است. برای سیستم‌عاملتان بگیریدش (با بررسی checksum):
+   AetherifY فایل واقعیِ `aether` را از [ریلیزهای CluvexStudio/Aether](https://github.com/CluvexStudio/Aether/releases) کنار خودش قرار می‌دهد و خودش نمی‌سازدش — این مخزن فقط رابط گرافیکی است. برای سیستم‌عاملتان بگیریدش (با بررسی checksum):
 
    ```sh
    ./src-tauri/binaries/fetch-aether.sh
@@ -89,7 +89,7 @@
 
 ## درباره‌ی Aether
 
-[Aether](https://github.com/CluvexStudio/Aether) همان موتورِ واقعیِ عبور از سانسور است که این برنامه دورش را می‌گیرد — یک ابزار ترمینالیِ مستقل که مسیرهای قابل‌دسترس را پیدا و تونل را برقرار می‌کند، جدا از هر رابط گرافیکی. اگر ترجیح می‌دهید مستقیم از ترمینال استفاده کنید، یا می‌خواهید دقیق بدانید زیر کاپوت چه خبر است، همان مخزن جایی است که باید بخوانید. Aether-GUI فقط برای این وجود دارد که آن ابزار را برای کسانی که دوست ندارند در ترمینال زندگی کنند، یک‌کلیکی کند.
+[Aether](https://github.com/CluvexStudio/Aether) همان موتورِ واقعیِ عبور از سانسور است که این برنامه دورش را می‌گیرد — یک ابزار ترمینالیِ مستقل که مسیرهای قابل‌دسترس را پیدا و تونل را برقرار می‌کند، جدا از هر رابط گرافیکی. اگر ترجیح می‌دهید مستقیم از ترمینال استفاده کنید، یا می‌خواهید دقیق بدانید زیر کاپوت چه خبر است، همان مخزن جایی است که باید بخوانید. AetherifY فقط برای این وجود دارد که آن ابزار را برای کسانی که دوست ندارند در ترمینال زندگی کنند، یک‌کلیکی کند.
 
 ## مجوز
 

@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Aether-GUI",
-  "version": "0.8.0",
-  "identifier": "com.cluvexstudio.aethergui",
+  "productName": "AetherifY",
+  "version": "0.9.0",
+  "identifier": "com.aetherify.app",
   "build": {
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Aether-GUI",
+        "title": "AetherifY",
         "width": 420,
         "height": 640,
         "resizable": false,

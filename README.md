@@ -1,7 +1,7 @@
-# Aether-GUI
+# AetherifY
 
-[![Release](https://img.shields.io/github/v/release/MatinSenPai/Aether-GUI?sort=semver)](https://github.com/MatinSenPai/Aether-GUI/releases)
-[![License: AGPL v3](https://img.shields.io/github/license/MatinSenPai/Aether-GUI)](LICENSE)
+[![Release](https://img.shields.io/github/v/release/MadjidMAR/AetherVpnfy?sort=semver)](https://github.com/MadjidMAR/AetherVpnfy/releases)
+[![License: AGPL v3](https://img.shields.io/github/license/MadjidMAR/AetherVpnfy)](LICENSE)
 ![Platform](https://img.shields.io/badge/platform-Windows-0078D6)
 ![Tauri](https://img.shields.io/badge/Tauri-2-24C8DB?logo=tauri&logoColor=white)
 ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
@@ -9,12 +9,12 @@
 
 **English** · [فارسی](README_fa.md)
 
-A one-click desktop GUI for [**Aether**](https://github.com/CluvexStudio/Aether), a censorship-circumvention tunnel built for heavily restricted networks. Aether itself is a terminal tool: it discovers a working route out, establishes an encrypted tunnel, and exposes a local SOCKS5 proxy. Aether-GUI wraps that terminal tool in a small, animated desktop app so you don't have to touch a command line to use it — press Connect, and everything else (identity provisioning, route discovery, prompt answering) happens automatically in the background.
+A one-click desktop GUI for [**Aether**](https://github.com/CluvexStudio/Aether), a censorship-circumvention tunnel built for heavily restricted networks. Aether itself is a terminal tool: it discovers a working route out, establishes an encrypted tunnel, and exposes a local SOCKS5 proxy. AetherifY wraps that terminal tool in a small, animated desktop app so you don't have to touch a command line to use it — press Connect, and everything else (identity provisioning, route discovery, prompt answering) happens automatically in the background.
 
 This project does not reimplement any of Aether's tunneling logic. It drives the real `aether` binary in a pseudo-terminal, answers its interactive setup prompts on your behalf, and watches its output to tell you what's happening. All the actual censorship-circumvention work — MASQUE/QUIC obfuscation, WireGuard, route probing — is [Aether's](https://github.com/CluvexStudio/Aether), not this repo's.
 
 <p align="center">
-  <img src="docs/screenshot-idle2.png" alt="Aether-GUI — one-click connect screen" width="1080">
+  <img src="docs/screenshot-idle2.png" alt="AetherifY — one-click connect screen" width="1080">
 </p>
 
 ## Features
@@ -36,10 +36,10 @@ This project does not reimplement any of Aether's tunneling logic. It drives the
 
 ## Installing
 
-Grab the latest installer from the [Releases page](https://github.com/MatinSenPai/Aether-GUI/releases):
+Grab the latest installer from the [Releases page](https://github.com/MadjidMAR/AetherVpnfy/releases):
 
-- `Aether-GUI_x.y.z_x64-setup.exe` — standard installer (recommended)
-- `Aether-GUI_x.y.z_x64_en-US.msi` — MSI package, for scripted or enterprise installs
+- `AetherifY_x.y.z_x64-setup.exe` — standard installer (recommended)
+- `AetherifY_x.y.z_x64_en-US.msi` — MSI package, for scripted or enterprise installs
 
 Windows x64 only for now — see [Building from source](#building-from-source) for other platforms.
 
@@ -58,7 +58,7 @@ Windows x64 only for now — see [Building from source](#building-from-source) f
 
 3. **Fetch the Aether binary**
 
-   Aether-GUI bundles the real `aether` binary from [CluvexStudio/Aether releases](https://github.com/CluvexStudio/Aether/releases) rather than building it — this repo only ships the GUI. Fetch and checksum-verify it for your platform:
+   AetherifY bundles the real `aether` binary from [CluvexStudio/Aether releases](https://github.com/CluvexStudio/Aether/releases) rather than building it — this repo only ships the GUI. Fetch and checksum-verify it for your platform:
 
    ```sh
    ./src-tauri/binaries/fetch-aether.sh
@@ -89,7 +89,7 @@ Windows x64 only for now — see [Building from source](#building-from-source) f
 
 ## About Aether
 
-[Aether](https://github.com/CluvexStudio/Aether) is the actual censorship-circumvention engine this app wraps — a standalone terminal tool that discovers reachable routes and establishes the tunnel, independent of any GUI. If you'd rather use it directly from a terminal, or want to understand exactly what it's doing under the hood, that's the repo to read. Aether-GUI exists purely to make that tool one click away for people who don't want to live in a terminal.
+[Aether](https://github.com/CluvexStudio/Aether) is the actual censorship-circumvention engine this app wraps — a standalone terminal tool that discovers reachable routes and establishes the tunnel, independent of any GUI. If you'd rather use it directly from a terminal, or want to understand exactly what it's doing under the hood, that's the repo to read. AetherifY exists purely to make that tool one click away for people who don't want to live in a terminal.
 
 ## License
 

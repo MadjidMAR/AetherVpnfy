@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 /// `Auto` resolves to Aether's own default (MASQUE). Aether's own `scan_mode`
 /// already performs multi-route discovery internally (confirmed by manually
-/// running the real binary), so Aether-GUI does not implement a client-side
+/// running the real binary), so AetherifY does not implement a client-side
 /// protocol-fallback retry loop on top of this.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 #[serde(rename_all = "lowercase")]
