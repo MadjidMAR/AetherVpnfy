@@ -25,6 +25,8 @@ pub struct AetherManager {
     /// (a proven-working connection earns a full retry budget for whatever
     /// drops it next), and on a user-requested disconnect.
     retry_count: u32,
+    /// System tunnel (TUN) manager, active when `system_tunnel` is enabled.
+    tun_manager: Option<tun::TunManager>,
 }
 
 impl AetherManager {
@@ -34,6 +36,7 @@ impl AetherManager {
             state: ConnectionState::Idle,
             user_requested_stop: false,
             retry_count: 0,
+            tun_manager: None,
         }
     }
 
@@ -322,6 +325,34 @@ fn monitor_connect(
             // Only persisted as "last successful" once actually proven to
             // work, never on a mere attempt (see profiles::save's doc-comment).
             profiles::save(&app, &profile);
+
+            // Start system tunnel (TUN) if enabled in profile.
+            if profile.system_tunnel {
+                let resource_dir = app.path().resource_dir().unwrap_or_default();
+                let mut tun = tun::new_manager(&resource_dir);
+                match tun.start(&profile.bind_address) {
+                    Ok(()) => {
+                        let _ = app.emit(
+                            LOG_EVENT,
+                            LogEvent {
+                                line: "[tun] System tunnel started".into(),
+                                timestamp: now_millis(),
+                            },
+                        );
+                        manager.lock().unwrap().tun_manager = Some(tun);
+                    }
+                    Err(e) => {
+                        let _ = app.emit(
+                            LOG_EVENT,
+                            LogEvent {
+                                line: format!("[tun] Failed to start: {e}"),
+                                timestamp: now_millis(),
+                            },
+                        );
+                    }
+                }
+            }
+
             monitor_connected(app, manager, binary, data_dir, profile);
             return;
         }
@@ -393,6 +424,11 @@ pub fn request_disconnect(
         }
         mgr.user_requested_stop = true;
         mgr.retry_count = 0;
+        // Stop system tunnel before killing the session.
+        if let Some(ref mut tun) = mgr.tun_manager {
+            tun.stop();
+        }
+        mgr.tun_manager = None;
         if let Some(session) = mgr.session.as_ref() {
             session.send_ctrl_c();
         }
@@ -456,6 +492,11 @@ pub fn submit_access_code(
 /// nobody is left to receive.
 pub fn shutdown_blocking(manager: &Arc<Mutex<AetherManager>>, data_dir: &Path) {
     let mut mgr = manager.lock().unwrap();
+    // Stop system tunnel before killing the session.
+    if let Some(ref mut tun) = mgr.tun_manager {
+        tun.stop();
+    }
+    mgr.tun_manager = None;
     if let Some(session) = mgr.session.as_mut() {
         session.send_ctrl_c();
         std::thread::sleep(Duration::from_millis(500));

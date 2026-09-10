@@ -81,12 +81,12 @@ mod platform {
                 .args([
                     "-device", "tun://aether-tun",
                     "-proxy", &format!("socks5://{}", socks_addr),
-                    "-loglevel", "none",
+                    "-loglevel", "info",
                 ])
                 .stdout(Stdio::null())
-                .stderr(Stdio::null())
+                .stderr(Stdio::piped())
                 .spawn()
-                .map_err(|e| format!("Failed to start tun2socks: {e}"))?;
+                .map_err(|e| format!("Failed to start tun2socks: {e}. Ensure tun2socks.exe and wintun.dll are present, and run as Administrator."))?;
 
             self.tun2socks = Some(child);
 
@@ -180,16 +180,28 @@ mod platform {
     }
 
     /// Run a shell command and return its exit status, or an error string.
+    /// Captures stderr and includes it in error messages for easier debugging.
     fn run_cmd(cmd: &str) -> Result<(), String> {
         log::debug!("TUN routing: {cmd}");
-        let status = Command::new("cmd")
+        let output = Command::new("cmd")
             .args(["/C", cmd])
             .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .status()
+            .stderr(Stdio::piped())
+            .output()
             .map_err(|e| format!("Failed to run `{cmd}`: {e}"))?;
-        if !status.success() {
-            log::warn!("Command exited {status}: {cmd}");
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            let msg = if stderr.trim().is_empty() {
+                format!("Command failed with status {status}: {cmd}", status = output.status)
+            } else {
+                format!("Command failed with status {status}: {cmd}\nstderr: {stderr}", status = output.status)
+            };
+            log::warn!("{msg}");
+            // Hint about admin privileges for routing commands
+            if cmd.starts_with("netsh") || cmd.starts_with("route") {
+                return Err(format!("{msg}\nNote: Run as Administrator for system tunnel commands"));
+            }
+            return Err(msg);
         }
         Ok(())
     }
